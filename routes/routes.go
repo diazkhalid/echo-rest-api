@@ -14,6 +14,7 @@ func Init() *echo.Echo {
 	})
 	e.GET("/users", controllers.FetchAllUsers)
 	e.POST("/users", controllers.CreateUser)
+	e.PUT("/users/:id", controllers.UpdateUser)
 
 	return e
 }

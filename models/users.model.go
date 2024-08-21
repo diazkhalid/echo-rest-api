@@ -69,9 +69,38 @@ func CreateUser(email string, username string, password string) (Response, error
 	if err != nil {
 		return res, err
 	}
-	res.Status = http.StatusOK
+	res.Status = http.StatusCreated
 	res.Message = "Success"
 	res.Data = user
 
-	return res, nil
+	return res, err
+}
+
+func UpdateUser(id int, email string, username string, password string) (Response, error) {
+	var user User
+	var res Response
+	con := db.CreateCon()
+
+	sqlStatement := "UPDATE users SET email = ?, username = ?, password = ? WHERE id = ?"
+
+	stmt, err := con.Prepare(sqlStatement)
+	if err != nil {
+		return res, err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(email, username, password, id)
+	if err != nil {
+		return res, err
+	}
+
+	err = con.QueryRow("SELECT * FROM users WHERE id = ?", id).Scan(&user.Id, &user.Email, &user.Username, &user.Password)
+	if err != nil {
+		return res, err
+	}
+	res.Status = http.StatusCreated
+	res.Message = "Success"
+	res.Data = user
+
+	return res, err
 }
