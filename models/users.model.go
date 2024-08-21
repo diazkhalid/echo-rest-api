@@ -104,3 +104,33 @@ func UpdateUser(id int, email string, username string, password string) (Respons
 
 	return res, err
 }
+
+func DeleteUser(id int) (Response, error) {
+	var res Response
+	con := db.CreateCon()
+
+	sqlStatement := "DELETE FROM users WHERE id = ?"
+
+	stmt, err := con.Prepare(sqlStatement)
+	if err != nil {
+		return res, err
+	}
+	defer stmt.Close()
+
+	result, err := stmt.Exec(id)
+	if err != nil {
+		return res, err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return res, err
+	}
+
+	res.Status = http.StatusOK
+	res.Message = "Success"
+	res.Data = map[string]int64{
+		"rows_affected": rowsAffected,
+	}
+	return res, err
+}

@@ -58,3 +58,19 @@ func UpdateUser(c echo.Context) error {
 
 	return c.JSON(http.StatusCreated, result)
 }
+
+func DeleteUser(c echo.Context) error {
+	id := c.QueryParam("id")
+
+	userID, err := strconv.Atoi(id)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
+	}
+
+	result, err := models.DeleteUser(userID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, result)
+}
