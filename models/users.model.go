@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"net/http"
 	"rest-api-echo/db"
 )
@@ -10,6 +11,18 @@ type User struct {
 	Email    string `json:"email"`
 	Username string `json:"username"`
 	Password string `json:"password"`
+	RoleId   int    `json:"role_id"`
+	RoleName string `json:"role_name"`
+}
+
+func CheckRoleAvailable(roleId int) bool {
+	con := db.CreateCon()
+	sqlStatement := "SELECT * FROM roles WHERE id = ?"
+
+	var role Role
+	err := con.QueryRow(sqlStatement, roleId).Scan(&role.Id, &role.Name, &role.CreatedAt)
+
+	return err == nil
 }
 
 func FetchAllUsers() (Response, error) {
@@ -18,7 +31,7 @@ func FetchAllUsers() (Response, error) {
 	var res Response
 
 	con := db.CreateCon()
-	sqlStatement := "SELECT * FROM users"
+	sqlStatement := "SELECT us.*, r.name as role_name FROM users as us LEFT JOIN roles as r ON us.role_id = r.id"
 
 	rows, err := con.Query(sqlStatement)
 
@@ -28,7 +41,7 @@ func FetchAllUsers() (Response, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		err = rows.Scan(&user.Id, &user.Email, &user.Username, &user.Password)
+		err = rows.Scan(&user.Id, &user.Email, &user.Username, &user.Password, &user.RoleId, &user.RoleName)
 		if err != nil {
 			return res, err
 		}
@@ -42,12 +55,16 @@ func FetchAllUsers() (Response, error) {
 	return res, err
 }
 
-func CreateUser(email string, username string, password string) (Response, error) {
+func CreateUser(email string, username string, password string, roleId int) (Response, error) {
 	var user User
 	var res Response
 	con := db.CreateCon()
 
-	sqlStatement := "INSERT INTO users(email, username, password) VALUES(?,?,?)"
+	if !(CheckRoleAvailable(roleId)) {
+		return res, errors.New("Role not available")
+	}
+
+	sqlStatement := "INSERT INTO users(email, username, password, role_id) VALUES(?,?,?,?)"
 
 	stmt, err := con.Prepare(sqlStatement)
 	if err != nil {
@@ -55,7 +72,7 @@ func CreateUser(email string, username string, password string) (Response, error
 	}
 	defer stmt.Close()
 
-	result, err := stmt.Exec(email, username, password)
+	result, err := stmt.Exec(email, username, password, roleId)
 	if err != nil {
 		return res, err
 	}
@@ -65,7 +82,7 @@ func CreateUser(email string, username string, password string) (Response, error
 		return res, err
 	}
 
-	err = con.QueryRow("SELECT * FROM users WHERE id = ?", lastInsertedId).Scan(&user.Id, &user.Email, &user.Username, &user.Password)
+	err = con.QueryRow("SELECT us.*, r.name as role_name FROM users as us LEFT JOIN roles as r ON us.role_id = r.id WHERE us.id = ?", lastInsertedId).Scan(&user.Id, &user.Email, &user.Username, &user.Password, &user.RoleId, &user.RoleName)
 	if err != nil {
 		return res, err
 	}

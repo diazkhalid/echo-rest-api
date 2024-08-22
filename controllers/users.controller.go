@@ -21,13 +21,18 @@ func FetchAllUsers(c echo.Context) error {
 }
 
 func CreateUser(c echo.Context) error {
+	id := c.QueryParam("roleId")
+	roleId, err := strconv.Atoi(id)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
+	}
 	jsonBody := make(map[string]interface{})
-	err := json.NewDecoder(c.Request().Body).Decode(&jsonBody)
+	err = json.NewDecoder(c.Request().Body).Decode(&jsonBody)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
 	}
 
-	result, err := models.CreateUser(jsonBody["email"].(string), jsonBody["username"].(string), jsonBody["password"].(string))
+	result, err := models.CreateUser(jsonBody["email"].(string), jsonBody["username"].(string), jsonBody["password"].(string), roleId)
 
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})

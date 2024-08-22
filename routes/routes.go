@@ -17,5 +17,10 @@ func Init() *echo.Echo {
 	e.PUT("/users/:id", controllers.UpdateUser)
 	e.DELETE("/users", controllers.DeleteUser)
 
+	e.POST("/roles", controllers.CreateRole)
+	e.GET("/roles/:id", controllers.FetchRoleById)
+	e.GET("/roles", controllers.FetchAllRoles)
+	e.DELETE("/roles/:id", controllers.DeleteRoleById)
+
 	return e
 }
