@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"rest-api-echo/db"
+	"rest-api-echo/utils"
 )
 
 type User struct {
@@ -71,8 +72,8 @@ func CreateUser(email string, username string, password string, roleId int) (Res
 		return res, err
 	}
 	defer stmt.Close()
-
-	result, err := stmt.Exec(email, username, password, roleId)
+	hashedPassword, err := utils.HashPassword(password)
+	result, err := stmt.Exec(email, username, hashedPassword, roleId)
 	if err != nil {
 		return res, err
 	}
