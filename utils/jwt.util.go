@@ -6,7 +6,7 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-const secret = "secret-key"
+var secret string = GetEnv("SECRET_KEY")
 
 type jwtCustomClaims struct {
 	Id       int    `json:"id"`
