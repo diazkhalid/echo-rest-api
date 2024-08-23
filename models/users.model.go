@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql"
 	"errors"
 	"net/http"
 	"rest-api-echo/db"
@@ -73,6 +74,9 @@ func CreateUser(email string, username string, password string, roleId int) (Res
 	}
 	defer stmt.Close()
 	hashedPassword, err := utils.HashPassword(password)
+	if err != nil {
+		return res, err
+	}
 	result, err := stmt.Exec(email, username, hashedPassword, roleId)
 	if err != nil {
 		return res, err
@@ -151,4 +155,20 @@ func DeleteUser(id int) (Response, error) {
 		"rows_affected": rowsAffected,
 	}
 	return res, err
+}
+
+func GetUserByUsername(username string) (User, error) {
+	var user User
+	con := db.CreateCon()
+	sqlStatement := "SELECT us.*, r.name as role_name FROM users as us LEFT JOIN roles as r ON us.role_id = r.id WHERE username = ?"
+	err := con.QueryRow(sqlStatement, username).Scan(&user.Id, &user.Email, &user.Username, &user.Password, &user.RoleId, &user.RoleName)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return user, errors.New("User Not Found")
+		}
+		return user, err
+	}
+
+	return user, nil
 }

@@ -22,5 +22,8 @@ func Init() *echo.Echo {
 	e.GET("/roles", controllers.FetchAllRoles)
 	e.DELETE("/roles/:id", controllers.DeleteRoleById)
 
+	e.POST("/login", controllers.Login)
+	e.POST("/logout", controllers.Logout)
+
 	return e
 }
